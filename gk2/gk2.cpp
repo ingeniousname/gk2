@@ -1,10 +1,11 @@
 ﻿#include <iostream>
 #include <SDL.h>
+#include "ui/window.h"
 #undef main
 
 int main()
 {
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "hello world", "udalo sie", NULL);
-	return 0;
+	Window window(1024, 768);
+	window.run();
 }
 
