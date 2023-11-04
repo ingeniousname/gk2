@@ -3,7 +3,10 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <future>
 #include <thread>
+#include "reflection_calculator.h"
+#include "glm/glm.hpp"
 
 double TriangleFiller::getZ(std::vector<PointData> data, int width, int height)
 {
@@ -100,16 +103,14 @@ void TriangleFiller::fillRectangularTriangleAngleTop(Uint8* pixels, std::vector<
 	double one_m = 1 / getM(data[0], data[2]);
 	int ymin = data[0].y;
 	int ymax = data[2].y;
-	//double z = getZ(data, width, height);
+	glm::vec3 n_avg = glm::normalize((data[0].normal + data[1].normal + data[2].normal) / 3.f);
+	float z = (data[0].z + data[1].z + data[2].z) / 3;
 	for (int y = ymin; y <= ymax; y++)
 	{
 		for (int x = startx; x <= endx; x++)
 		{
-			Uint8* ptr = pixels + (4 * (y * width + x));
-			ptr[0] = 255;
-			ptr[1] = 255;
-			ptr[2] = 255;
-			ptr[3] = 255;
+			unsigned* ptr = (unsigned*)pixels + (y * width + x);
+			*ptr = ReflectionCalculator::get()->calculateColor(n_avg, {x, y, z});
 		}
 		endx += one_m;
 	}
@@ -123,17 +124,15 @@ void TriangleFiller::fillRectangularTriangleAngleBottom(Uint8* pixels, std::vect
 	double one_m = 1 / getM(data[0], data[2]);
 	int ymin = data[2].y;
 	int ymax = data[0].y;
-	//double z = getZ(data, width, height);
+	glm::vec3 n_avg = glm::normalize((data[0].normal + data[1].normal + data[2].normal) / 3.f);
+	float z = (data[0].z + data[1].z + data[2].z) / 3;
 
 	for (int y = ymin; y <= ymax; y++)
 	{
 		for (int x = startx; x <= endx; x++)
 		{
-			Uint8* ptr = pixels + (4 * (y * width + x));
-			ptr[0] = 255;
-			ptr[1] = 0;
-			ptr[2] = 0;
-			ptr[3] = 255;
+			unsigned* ptr = (unsigned*)pixels + (y * width + x);
+			*ptr = ReflectionCalculator::get()->calculateColor(n_avg, { x, y, z });
 		}
 		startx += one_m;
 	}
@@ -141,6 +140,7 @@ void TriangleFiller::fillRectangularTriangleAngleBottom(Uint8* pixels, std::vect
 
 void TriangleFiller::fillTriangles(Uint8* pixels, std::vector<std::vector<PointData>> pointData, int width, int height)
 {
+	std::vector<std::future<void>> f;
 	for (int i = 0; i < pointData.size() - 1; i++)
 	{
 		for (int j = 0; j < pointData[i].size() - 1; j++)
@@ -158,12 +158,14 @@ void TriangleFiller::fillTriangles(Uint8* pixels, std::vector<std::vector<PointD
 			//fillPolygon(pixels, t1, width, height);
 			//fillPolygon(pixels, t2, width, height);
 
-
-			fillRectangularTriangleAngleTop(pixels, t1, width, height);
-			fillRectangularTriangleAngleBottom(pixels, t2, width, height);
+			f.push_back(std::async(fillRectangularTriangleAngleTop, pixels, t1, width, height));
+			f.push_back(std::async(fillRectangularTriangleAngleBottom, pixels, t2, width, height));
+			//fillRectangularTriangleAngleTop(pixels, t1, width, height);
+			//fillRectangularTriangleAngleBottom(pixels, t2, width, height);
 		}
 	}
-
+	for (int i = 0; i < f.size(); i++)
+		f[i].get();
 }
 
 bool AETComparator::operator()(const ActiveEdgeTableNode& n1, const ActiveEdgeTableNode& n2)

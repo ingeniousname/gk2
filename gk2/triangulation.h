@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "glm/vec3.hpp"
 
 
 struct PointData
@@ -7,11 +8,21 @@ struct PointData
 	int x;
 	int y;
 	double z;
+	glm::vec3 normal;
 	PointData(int _x, int _y, double _z)
 	{
 		x = _x;
 		y = _y;
 		z = _z;
+		normal = { 0.f, 0.f, 1.f };
+	}
+
+	PointData(int _x, int _y, double _z, glm::vec3 n)
+	{
+		x = _x;
+		y = _y;
+		z = _z;
+		normal = n;
 	}
 };
 

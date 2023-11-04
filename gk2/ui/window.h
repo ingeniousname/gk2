@@ -1,14 +1,14 @@
 #include "SDL.h"
 #include "../triangulation.h"
+#include "imgui.h"
 
 class Window {
-	const int WIDTH;
-	const int HEIGHT;
+	int WIDTH;
+	int HEIGHT;
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	SDL_Texture* texture = NULL;
 	Triangulation t;
-
 
 	void renderGUI(int*);
 	void updateFrame(int);

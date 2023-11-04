@@ -54,6 +54,9 @@
     <ClCompile Include="triangle_filler.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="reflection_calculator.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ui\window.h">
@@ -87,6 +90,9 @@
       <Filter>Pliki źródłowe</Filter>
     </ClInclude>
     <ClInclude Include="triangle_filler.h">
+      <Filter>Pliki źródłowe</Filter>
+    </ClInclude>
+    <ClInclude Include="reflection_calculator.h">
       <Filter>Pliki źródłowe</Filter>
     </ClInclude>
   </ItemGroup>

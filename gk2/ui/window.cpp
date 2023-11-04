@@ -1,9 +1,9 @@
 #include "window.h"
-#include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "backends/imgui_impl_sdlrenderer2.h"
 #include "../triangle_filler.h"
-
+#include "../reflection_calculator.h"
+#include <iostream>
 
 void Window::renderGUI(int* value)
 {
@@ -14,17 +14,36 @@ void Window::renderGUI(int* value)
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-
-    ImGui::SetNextWindowSize(ImVec2(400, 300));
     ImGui::Begin("Options");
-    if (ImGui::SliderInt("Divisions in X axis", &t.divisions_X, 1, 100))
+    ImGui::Text("Triangle count");
+    if (ImGui::SliderInt("X axis", &t.divisions_X, 1, 100))
     {
         t.updateTriangulation(WIDTH, HEIGHT);
     }
-    if (ImGui::SliderInt("Divisions in y axis", &t.divisions_Y, 1, 100))
+    if (ImGui::SliderInt("Y axis", &t.divisions_Y, 1, 100))
     {
         t.updateTriangulation(WIDTH, HEIGHT);
     }
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+    ImGui::Text("Coefficients");
+    if (ImGui::SliderFloat("kd", &ReflectionCalculator::get()->kd, 0, 1))
+    {
+        ReflectionCalculator::get()->ks = 1 - ReflectionCalculator::get()->kd;
+    }
+    if (ImGui::SliderFloat("ks", &ReflectionCalculator::get()->ks, 0, 1))
+    {
+        ReflectionCalculator::get()->kd = 1 - ReflectionCalculator::get()->ks;
+    }
+    ImGui::SliderInt("m", &ReflectionCalculator::get()->m, 1, 100);
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+    ImGui::ColorPicker4("Object color", &ReflectionCalculator::get()->objectColor.x);
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
     ImGui::End();
     ImGui::Render();
@@ -94,6 +113,7 @@ Window::Window(int width, int height) : WIDTH(width), HEIGHT(height)
     }
 
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
+    
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -132,6 +152,16 @@ void Window::run()
             if (e.type == SDL_QUIT)
             {
                 quit = true;
+            }
+            else if (e.type == SDL_WINDOWEVENT)
+            {
+                if (e.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    SDL_DestroyTexture(texture);
+                    WIDTH = e.window.data1;
+                    HEIGHT = e.window.data2;
+                    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
+                }
             }
         }
 
