@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <array>
 #include "glm/vec3.hpp"
 
 
@@ -32,6 +33,7 @@ class Triangulation
 	double B_i3(int i, double t);
 	double z(double x, double y);
 	std::vector<std::vector<PointData>> data;
+	std::array<std::array<double, 4>, 4> z_point;
 public:
 	Triangulation();
 	int divisions_X;

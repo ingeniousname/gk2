@@ -40,7 +40,27 @@ void Window::renderGUI(int* value)
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
-    ImGui::ColorPicker4("Object color", &ReflectionCalculator::get()->objectColor.x);
+    ImGui::Checkbox("Load texture from file", &textureFromFile);
+    if(textureFromFile)
+    {
+
+    }
+    else
+    {
+        ImGui::ColorEdit3("Object color", &ReflectionCalculator::get()->objectColor.x);
+    }
+    ImGui::ColorEdit3("Light color", &ReflectionCalculator::get()->lightColor.x);
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+    ImGui::Text("Animation");
+    ImGui::SliderFloat("Z", &ReflectionCalculator::get()->lightSource.z, 1, 1000);
+    ImGui::SliderFloat("R", &R, 0, 1000);
+    ImGui::SliderFloat("T", &T, 0.1f, 20.f);
+    if (ImGui::Button("pause/unpause", ImVec2(100, 25)))
+    {
+        paused = !paused;
+    }
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
@@ -56,7 +76,19 @@ void Window::updateFrame(int offset)
 {
     int pitch;
     void* frame;
-    SDL_LockTexture(texture, NULL, &frame, &pitch);
+    
+    now = std::chrono::high_resolution_clock::now();
+    if (paused)
+    {
+        time += (now - last).count() / 1e9;
+        ReflectionCalculator::get()->lightSource.x = WIDTH / 2 + R * std::sin(2 * 3.1415f * time / T);
+        ReflectionCalculator::get()->lightSource.y = HEIGHT / 2 + R * std::cos(2 * 3.1415f * time / T);
+    }
+    last = now;
+
+
+
+    SDL_LockTexture(screenTexture, NULL, &frame, &pitch);
 
     //for (int x = 0; x < WIDTH; x++)
     //{
@@ -82,10 +114,11 @@ void Window::updateFrame(int offset)
     TriangleFiller::fillTriangles((Uint8*)frame, t.getData(), WIDTH, HEIGHT);
 
 
-    SDL_UnlockTexture(texture);
+    SDL_UnlockTexture(screenTexture);
 }
 
-Window::Window(int width, int height) : WIDTH(width), HEIGHT(height)
+Window::Window(int width, int height) : WIDTH(width), HEIGHT(height), R(0.f), T(5.f), time(0.f), textureFromFile(false),
+    paused(false), now(std::chrono::high_resolution_clock::now()), last(std::chrono::high_resolution_clock::now())
 {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) < 0)
     {
@@ -112,7 +145,7 @@ Window::Window(int width, int height) : WIDTH(width), HEIGHT(height)
         return;
     }
 
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
+    screenTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
     
 
     IMGUI_CHECKVERSION();
@@ -132,7 +165,7 @@ Window::~Window()
 {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    SDL_DestroyTexture(texture);
+    SDL_DestroyTexture(screenTexture);
     SDL_Quit();
 }
 
@@ -157,10 +190,10 @@ void Window::run()
             {
                 if (e.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
-                    SDL_DestroyTexture(texture);
+                    SDL_DestroyTexture(screenTexture);
                     WIDTH = e.window.data1;
                     HEIGHT = e.window.data2;
-                    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
+                    screenTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
                 }
             }
         }
@@ -168,7 +201,7 @@ void Window::run()
 
         SDL_RenderClear(renderer);
         updateFrame(tick);
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
+        SDL_RenderCopy(renderer, screenTexture, NULL, NULL);
         renderGUI(&value);
         SDL_RenderPresent(renderer);
         tick += 5;

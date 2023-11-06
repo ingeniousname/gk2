@@ -103,14 +103,23 @@ void TriangleFiller::fillRectangularTriangleAngleTop(Uint8* pixels, std::vector<
 	double one_m = 1 / getM(data[0], data[2]);
 	int ymin = data[0].y;
 	int ymax = data[2].y;
-	glm::vec3 n_avg = glm::normalize((data[0].normal + data[1].normal + data[2].normal) / 3.f);
-	float z = (data[0].z + data[1].z + data[2].z) / 3;
+	std::vector<glm::vec3> pointColors;
+	for (int i = 0; i < data.size(); i++)
+		pointColors.push_back(ReflectionCalculator::get()->calculateColor(data[i].normal, { data[i].x, data[i].y, data[i].z }));
+	int Xa = data[0].x, Ya = data[0].y, Xb = data[1].x, Yb = data[1].y, Xc = data[2].x, Yc = data[2].y;
 	for (int y = ymin; y <= ymax; y++)
 	{
 		for (int x = startx; x <= endx; x++)
 		{
-			unsigned* ptr = (unsigned*)pixels + (y * width + x);
-			*ptr = ReflectionCalculator::get()->calculateColor(n_avg, {x, y, z});
+			float alpha = ((Yb * Xc - Yc * Xb) + (Yc * (float)x - (float)y * Xc) + ((float)y * Xb - Yb * (float)x)) / ((Yb * Xc - Yc * Xb) + (Yc * Xa - Ya * Xc) + (Ya * Xb - Yb * Xa));
+			float beta = ((Yc * Xa - Ya * Xc) + (Ya * (float)x - (float)y * Xa) + ((float)y * Xc - Yc * (float)x)) / ((Yb * Xc - Yc * Xb) + (Yc * Xa - Ya * Xc) + (Ya * Xb - Yb * Xa));
+			float gamma = 1 - alpha - beta;
+
+			Uint8* ptr = pixels + (4 * (y * width + x));
+			ptr[0] = alpha * pointColors[0].x + beta * pointColors[1].x + gamma * pointColors[2].x;
+			ptr[1] = alpha * pointColors[0].y + beta * pointColors[1].y + gamma * pointColors[2].y;
+			ptr[2] = alpha * pointColors[0].z + beta * pointColors[1].z + gamma * pointColors[2].z;
+			ptr[3] = 255;
 		}
 		endx += one_m;
 	}
@@ -124,15 +133,24 @@ void TriangleFiller::fillRectangularTriangleAngleBottom(Uint8* pixels, std::vect
 	double one_m = 1 / getM(data[0], data[2]);
 	int ymin = data[2].y;
 	int ymax = data[0].y;
-	glm::vec3 n_avg = glm::normalize((data[0].normal + data[1].normal + data[2].normal) / 3.f);
-	float z = (data[0].z + data[1].z + data[2].z) / 3;
+	std::vector<glm::vec3> pointColors;
+	for (int i = 0; i < data.size(); i++)
+		pointColors.push_back(ReflectionCalculator::get()->calculateColor(data[i].normal, { data[i].x, data[i].y, data[i].z }));
+	int Xa = data[0].x, Ya = data[0].y, Xb = data[1].x, Yb = data[1].y, Xc = data[2].x, Yc = data[2].y;
 
 	for (int y = ymin; y <= ymax; y++)
 	{
 		for (int x = startx; x <= endx; x++)
 		{
-			unsigned* ptr = (unsigned*)pixels + (y * width + x);
-			*ptr = ReflectionCalculator::get()->calculateColor(n_avg, { x, y, z });
+			float alpha = ((Yb * Xc - Yc * Xb) + (Yc * (float)x - (float)y * Xc) + ((float)y * Xb - Yb * (float)x)) / ((Yb * Xc - Yc * Xb) + (Yc * Xa - Ya * Xc) + (Ya * Xb - Yb * Xa));
+			float beta = ((Yc * Xa - Ya * Xc) + (Ya * (float)x - (float)y * Xa) + ((float)y * Xc - Yc * (float)x)) / ((Yb * Xc - Yc * Xb) + (Yc * Xa - Ya * Xc) + (Ya * Xb - Yb * Xa));
+			float gamma = 1 - alpha - beta;
+
+			Uint8* ptr = pixels + (4 * (y * width + x));
+			ptr[0] = alpha * pointColors[0].x + beta * pointColors[1].x + gamma * pointColors[2].x;
+			ptr[1] = alpha * pointColors[0].y + beta * pointColors[1].y + gamma * pointColors[2].y;
+			ptr[2] = alpha * pointColors[0].z + beta * pointColors[1].z + gamma * pointColors[2].z;
+			ptr[3] = 255;
 		}
 		startx += one_m;
 	}
@@ -155,13 +173,8 @@ void TriangleFiller::fillTriangles(Uint8* pixels, std::vector<std::vector<PointD
 			t2.push_back(pointData[i + 1][j + 1]);
 			t2.push_back(pointData[i + 1][j]);
 
-			//fillPolygon(pixels, t1, width, height);
-			//fillPolygon(pixels, t2, width, height);
-
 			f.push_back(std::async(fillRectangularTriangleAngleTop, pixels, t1, width, height));
 			f.push_back(std::async(fillRectangularTriangleAngleBottom, pixels, t2, width, height));
-			//fillRectangularTriangleAngleTop(pixels, t1, width, height);
-			//fillRectangularTriangleAngleBottom(pixels, t2, width, height);
 		}
 	}
 	for (int i = 0; i < f.size(); i++)

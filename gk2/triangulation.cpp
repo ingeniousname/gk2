@@ -17,7 +17,7 @@ double Triangulation::z(double x, double y)
 	double res = 0.0;
 	for (int i = 0; i <= 3; i++)
 		for (int j = 0; j <= 3; j++)
-			res += B_i3(i, x) * B_i3(j, y);
+			res += z_point[i][j] * B_i3(i, x) * B_i3(j, y);
 
 	return res;
 }
@@ -28,6 +28,14 @@ Triangulation::Triangulation()
 {
 	divisions_X = 30;
 	divisions_Y = 30;
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
+		{
+			z_point[i][j] = 1;
+			//if (i >= 1 && i <= 2 && j >= 1 && j <= 2)
+			//	z_point[i][j] = 2;
+			//else z_point[i][j] = 1;
+		}
 }
 
 void Triangulation::updateTriangulation(int width, int height)
@@ -64,7 +72,6 @@ void Triangulation::updateTriangulation(int width, int height)
 			int x = i == divisions_X ? width - 1 : xoffset * i + global_x_offset;
 			int y = j == divisions_Y ? height - 1 : yoffset * j + local_y_offset;
 
-
 			const double h = 1e-8;
 			double dzx = (z((double)x / width + h, (double)y / height) - z((double)x / width - h, (double)y / height)) / (2 * h);
 			double dzy = (z((double)x / width, (double)y / height + h) - z((double)x / width, (double)y / height - h)) / (2 * h);
@@ -73,7 +80,7 @@ void Triangulation::updateTriangulation(int width, int height)
 				x,
 				y,
 				z((double)x / width, (double)y / height),
-				glm::normalize(glm::cross(glm::vec3{ x, 1, dzx }, glm::vec3{ 1, y, dzy }))
+				glm::normalize(glm::cross(glm::vec3{ 1, 0, dzx }, glm::vec3{ 0, 1, dzy }))
 
 			);
 			innerData.push_back(p);

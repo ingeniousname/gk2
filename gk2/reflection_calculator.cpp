@@ -20,7 +20,7 @@ ReflectionCalculator* ReflectionCalculator::get()
 	return _instance;
 }
 
-unsigned ReflectionCalculator::calculateColor(glm::vec3 nVector, glm::vec3 pos)
+glm::vec3 ReflectionCalculator::calculateColor(glm::vec3 nVector, glm::vec3 pos)
 {
 	glm::vec3 L = glm::normalize(lightSource - pos);
 	float NLangle = glm::dot(glm::normalize(nVector), L);
@@ -32,9 +32,8 @@ unsigned ReflectionCalculator::calculateColor(glm::vec3 nVector, glm::vec3 pos)
 
 
 
-	unsigned red = 255 * objectColor.x * lightColor.x * (kd * NLangle + ks * VRangle);
+	unsigned red = 255 * objectColor.z * lightColor.z * (kd * NLangle + ks * VRangle);
 	unsigned green = 255 * objectColor.y * lightColor.y * (kd * NLangle + ks * VRangle);
-	unsigned blue = 255 * objectColor.z * lightColor.z * (kd * NLangle + ks * VRangle);
-	unsigned alpha = 255;
-	return (alpha << 24) | (red << 16) | (green << 8) | blue;
+	unsigned blue = 255 * objectColor.x * lightColor.x * (kd * NLangle + ks * VRangle);
+	return { red, green, blue };
 }

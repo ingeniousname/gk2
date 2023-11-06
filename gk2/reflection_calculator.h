@@ -16,5 +16,5 @@ public:
 	glm::vec3 lightSource;
 	ImVec4 objectColor;
 	ImVec4 lightColor;
-	unsigned calculateColor(glm::vec3 nVector, glm::vec3 pos);
+	glm::vec3 calculateColor(glm::vec3 nVector, glm::vec3 pos);
 };
