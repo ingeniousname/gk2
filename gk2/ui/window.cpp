@@ -56,7 +56,7 @@ void Window::renderGUI(int* value)
         if (ImGui::Button("Load", ImVec2(100, 25)))
         {
             fileError = false;
-            if (ReflectionCalculator::get()->loadObjectTexture(renderer))
+            if (ReflectionCalculator::get()->loadObjectTexture())
             {
                 fileError = true;
             }
@@ -110,7 +110,7 @@ void Window::renderGUI(int* value)
 
     ImGui::Text("Normal map - ");
     ImGui::SameLine();
-    if (t.hasNormalMap())
+    if (ReflectionCalculator::get()->hasNormalMap())
     {
         ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
         ImGui::Text("loaded");
@@ -122,11 +122,11 @@ void Window::renderGUI(int* value)
         ImGui::Text("not loaded");
         ImGui::PopStyleColor();
     }
-    ImGui::InputText("Fname", &t.normalMapPath);
+    ImGui::InputText("Fname", &ReflectionCalculator::get()->normalMapPath);
     if (ImGui::Button("Load normal map", ImVec2(100, 25)))
     {
         fileError = false;
-        if (t.loadNormalMap(renderer))
+        if (ReflectionCalculator::get()->loadNormalMap())
         {
             fileError = true;
         }
@@ -247,7 +247,7 @@ Window::Window(int width, int height) : WIDTH(width), HEIGHT(height), R(0.f), T(
 
     t.updateTriangulation(WIDTH, HEIGHT);
 
-    ReflectionCalculator::get()->loadObjectTexture(renderer);
+    ReflectionCalculator::get()->loadObjectTexture();
 }
 
 Window::~Window()
@@ -255,7 +255,7 @@ Window::~Window()
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_DestroyTexture(screenTexture);
-    t.deleteNormalMap();
+    ReflectionCalculator::get()->deleteNormalMap();
     ReflectionCalculator::get()->deleteObjectTexture();
     SDL_Quit();
 }

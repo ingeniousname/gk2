@@ -22,7 +22,10 @@ public:
 	ImVec4 lightColor;
 	std::string objectTexturePath = "";
 	std::string normalMapPath = "";
-	bool loadObjectTexture(SDL_Renderer* r);
+	bool hasNormalMap();
+	bool loadNormalMap();
+	void deleteNormalMap();
+	bool loadObjectTexture();
 	void deleteObjectTexture();
 	bool hasTexture();
 	unsigned calculateColor(glm::vec3 nVector, glm::vec3 pos);

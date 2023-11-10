@@ -35,7 +35,6 @@ class Triangulation
 	double B_i3(int i, double t);
 	double z(double x, double y);
 	std::vector<std::vector<PointData>> data;
-	SDL_Surface* normalMap = NULL;
 public:
 	std::string normalMapPath = "";
 	std::array<std::array<float, 4>, 4> z_point;
@@ -43,8 +42,5 @@ public:
 	int divisions_X;
 	int divisions_Y;
 	void updateTriangulation(int width, int height);
-	bool hasNormalMap();
-	bool loadNormalMap(SDL_Renderer* r);
-	void deleteNormalMap();
 	std::vector<std::vector<PointData>>& getData();
 };

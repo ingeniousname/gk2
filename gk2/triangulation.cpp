@@ -78,27 +78,6 @@ void Triangulation::updateTriangulation(int width, int height)
 				y,
 				z((double)x / width, (double)y / height),
 				nVector);
-			if (this->hasNormalMap())
-			{
-				glm::vec3 B = glm::normalize(glm::cross(nVector, glm::vec3(0, 0, 1)));
-				if (glm::l1Norm(glm::vec3(0, 0, 1), nVector) < 1e-6)
-					B = glm::vec3(0, 1, 0);
-				glm::vec3 T = glm::normalize(glm::cross(B, nVector));
-				glm::mat3x3 transformNormalMatrix(T, B, nVector);
-				
-				Uint32* data = (Uint32*)((Uint8*)normalMap->pixels + (normalMap->format->BytesPerPixel * ((y % normalMap->h) * normalMap->w + (x % normalMap->w))));
-				//glm::vec3 NTexture = glm::vec3(
-				//	(*data & normalMap->format->Rmask) >> normalMap->format->Rshift,
-				//	(*data & normalMap->format->Gmask) >> normalMap->format->Gshift,
-				//	(*data & normalMap->format->Bmask) >> normalMap->format->Bshift);
-
-
-				p.normal = glm::normalize(transformNormalMatrix * glm::vec3(
-					((float)((*data & normalMap->format->Rmask) >> normalMap->format->Rshift) - 127.f) / 128.f,
-					((float)((*data & normalMap->format->Gmask) >> normalMap->format->Gshift) - 127.f) / 128.f,
-					(float)((*data & normalMap->format->Bmask) >> normalMap->format->Bshift) / 255.f));
-			}
-
 			innerData.push_back(p);
 		}
 		data.push_back(innerData);
@@ -106,33 +85,6 @@ void Triangulation::updateTriangulation(int width, int height)
 	return;
 }
 
-bool Triangulation::hasNormalMap()
-{
-	return normalMap != NULL;
-}
-
-bool Triangulation::loadNormalMap(SDL_Renderer* r)
-{
-	deleteNormalMap();
-	normalMap = IMG_Load(normalMapPath.c_str());
-	if (normalMap != NULL)
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}
-}
-
-void Triangulation::deleteNormalMap()
-{
-	if (normalMap != NULL)
-	{
-		SDL_FreeSurface(normalMap);
-		normalMap = NULL;
-	}
-}
 
 std::vector<std::vector<PointData>>& Triangulation::getData()
 {
