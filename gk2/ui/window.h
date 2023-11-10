@@ -9,11 +9,10 @@ class Window {
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	SDL_Texture* screenTexture = NULL;
-	SDL_Texture* objectTexture = NULL;
 	Triangulation t;
 	std::chrono::high_resolution_clock::time_point now, last;
 	float R, T, time;
-	bool paused, textureFromFile;
+	bool paused, textureFromFile, fileError;
 
 	void renderGUI(int*);
 	void updateFrame(int);

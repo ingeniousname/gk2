@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
 #include <array>
+#include <string>
 #include "glm/vec3.hpp"
+#include "SDL.h"
 
 
 struct PointData
@@ -33,11 +35,16 @@ class Triangulation
 	double B_i3(int i, double t);
 	double z(double x, double y);
 	std::vector<std::vector<PointData>> data;
-	std::array<std::array<double, 4>, 4> z_point;
+	SDL_Surface* normalMap = NULL;
 public:
+	std::string normalMapPath = "";
+	std::array<std::array<float, 4>, 4> z_point;
 	Triangulation();
 	int divisions_X;
 	int divisions_Y;
 	void updateTriangulation(int width, int height);
+	bool hasNormalMap();
+	bool loadNormalMap(SDL_Renderer* r);
+	void deleteNormalMap();
 	std::vector<std::vector<PointData>>& getData();
 };

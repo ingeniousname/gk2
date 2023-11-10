@@ -1,6 +1,8 @@
 #include "window.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "backends/imgui_impl_sdlrenderer2.h"
+#include "misc/cpp/imgui_stdlib.h"
+#include "SDL_image.h"
 #include "../triangle_filler.h"
 #include "../reflection_calculator.h"
 #include <iostream>
@@ -15,6 +17,7 @@ void Window::renderGUI(int* value)
     ImGui::NewFrame();
 
     ImGui::Begin("Options");
+
     ImGui::Text("Triangle count");
     if (ImGui::SliderInt("X axis", &t.divisions_X, 1, 100))
     {
@@ -24,9 +27,11 @@ void Window::renderGUI(int* value)
     {
         t.updateTriangulation(WIDTH, HEIGHT);
     }
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
+
     ImGui::Text("Coefficients");
     if (ImGui::SliderFloat("kd", &ReflectionCalculator::get()->kd, 0, 1))
     {
@@ -40,19 +45,34 @@ void Window::renderGUI(int* value)
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
-    ImGui::Checkbox("Load texture from file", &textureFromFile);
+
+    if (ImGui::Checkbox("Load texture from file", &textureFromFile))
+    {
+        ReflectionCalculator::get()->deleteObjectTexture();
+    }
     if(textureFromFile)
     {
-
+        ImGui::InputText("Filename", &ReflectionCalculator::get()->objectTexturePath);
+        if (ImGui::Button("Load", ImVec2(100, 25)))
+        {
+            fileError = false;
+            if (ReflectionCalculator::get()->loadObjectTexture(renderer))
+            {
+                fileError = true;
+            }
+        }
+        ImGui::Spacing();
     }
     else
     {
         ImGui::ColorEdit3("Object color", &ReflectionCalculator::get()->objectColor.x);
     }
     ImGui::ColorEdit3("Light color", &ReflectionCalculator::get()->lightColor.x);
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
+
     ImGui::Text("Animation");
     ImGui::SliderFloat("Z", &ReflectionCalculator::get()->lightSource.z, 1, 1000);
     ImGui::SliderFloat("R", &R, 0, 1000);
@@ -61,10 +81,71 @@ void Window::renderGUI(int* value)
     {
         paused = !paused;
     }
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
+
+    ImGui::Text("Control points z coordinates");
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            std::string text = "(" + std::to_string(i) + "," + std::to_string(j) + ")";
+            ImGui::PushItemWidth(100);
+            if (ImGui::SliderFloat(text.c_str(), &t.z_point[i][j], -1.f, 1.f, "%.3f"))
+            {
+                t.updateTriangulation(WIDTH, HEIGHT);
+            }
+            if (j != 3)
+            {
+                ImGui::SameLine();
+            }
+        }
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    ImGui::Text("Normal map - ");
+    ImGui::SameLine();
+    if (t.hasNormalMap())
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
+        ImGui::Text("loaded");
+        ImGui::PopStyleColor();
+    }
+    else
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
+        ImGui::Text("not loaded");
+        ImGui::PopStyleColor();
+    }
+    ImGui::InputText("Fname", &t.normalMapPath);
+    if (ImGui::Button("Load normal map", ImVec2(100, 25)))
+    {
+        fileError = false;
+        if (t.loadNormalMap(renderer))
+        {
+            fileError = true;
+        }
+        t.updateTriangulation(WIDTH, HEIGHT);
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+    ImGui::Spacing();
+    if (fileError)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
+        ImGui::Text("Error loading a file!");
+        ImGui::PopStyleColor();
+
+    }
     ImGui::End();
     ImGui::Render();
 
@@ -117,7 +198,7 @@ void Window::updateFrame(int offset)
     SDL_UnlockTexture(screenTexture);
 }
 
-Window::Window(int width, int height) : WIDTH(width), HEIGHT(height), R(0.f), T(5.f), time(0.f), textureFromFile(false),
+Window::Window(int width, int height) : WIDTH(width), HEIGHT(height), R(0.f), T(5.f), time(0.f), textureFromFile(true), fileError(false),
     paused(false), now(std::chrono::high_resolution_clock::now()), last(std::chrono::high_resolution_clock::now())
 {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) < 0)
@@ -145,6 +226,12 @@ Window::Window(int width, int height) : WIDTH(width), HEIGHT(height), R(0.f), T(
         return;
     }
 
+    if (!IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG))
+    {
+        throw("failed to load IMG");
+        return;
+    }
+
     screenTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
     
 
@@ -159,6 +246,8 @@ Window::Window(int width, int height) : WIDTH(width), HEIGHT(height), R(0.f), T(
     ImGui_ImplSDLRenderer2_Init(renderer);
 
     t.updateTriangulation(WIDTH, HEIGHT);
+
+    ReflectionCalculator::get()->loadObjectTexture(renderer);
 }
 
 Window::~Window()
@@ -166,6 +255,8 @@ Window::~Window()
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_DestroyTexture(screenTexture);
+    t.deleteNormalMap();
+    ReflectionCalculator::get()->deleteObjectTexture();
     SDL_Quit();
 }
 

@@ -1,5 +1,7 @@
 #include "triangulation.h"
 #include "glm/glm.hpp"
+#include "glm/gtx/norm.hpp"
+#include "SDL_image.h"
 
 double Triangulation::B_i3(int i, double t)
 {
@@ -31,10 +33,7 @@ Triangulation::Triangulation()
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 4; j++)
 		{
-			z_point[i][j] = 1;
-			//if (i >= 1 && i <= 2 && j >= 1 && j <= 2)
-			//	z_point[i][j] = 2;
-			//else z_point[i][j] = 1;
+			z_point[i][j] = 0;
 		}
 }
 
@@ -59,8 +58,6 @@ void Triangulation::updateTriangulation(int width, int height)
 		int local_yoverflow = yoverflow;
 		int local_y_offset = 0;
 
-
-
 		std::vector<PointData> innerData;
 		for (int j = 0; j <= divisions_Y; j++)
 		{
@@ -75,19 +72,66 @@ void Triangulation::updateTriangulation(int width, int height)
 			const double h = 1e-8;
 			double dzx = (z((double)x / width + h, (double)y / height) - z((double)x / width - h, (double)y / height)) / (2 * h);
 			double dzy = (z((double)x / width, (double)y / height + h) - z((double)x / width, (double)y / height - h)) / (2 * h);
-
+			glm::vec3 nVector = glm::normalize(glm::cross(glm::vec3{ 1, 0, dzx }, glm::vec3{ 0, 1, dzy }));
 			PointData p(
 				x,
 				y,
 				z((double)x / width, (double)y / height),
-				glm::normalize(glm::cross(glm::vec3{ 1, 0, dzx }, glm::vec3{ 0, 1, dzy }))
+				nVector);
+			if (this->hasNormalMap())
+			{
+				glm::vec3 B = glm::normalize(glm::cross(nVector, glm::vec3(0, 0, 1)));
+				if (glm::l1Norm(glm::vec3(0, 0, 1), nVector) < 1e-6)
+					B = glm::vec3(0, 1, 0);
+				glm::vec3 T = glm::normalize(glm::cross(B, nVector));
+				glm::mat3x3 transformNormalMatrix(T, B, nVector);
+				
+				Uint32* data = (Uint32*)((Uint8*)normalMap->pixels + (normalMap->format->BytesPerPixel * ((y % normalMap->h) * normalMap->w + (x % normalMap->w))));
+				//glm::vec3 NTexture = glm::vec3(
+				//	(*data & normalMap->format->Rmask) >> normalMap->format->Rshift,
+				//	(*data & normalMap->format->Gmask) >> normalMap->format->Gshift,
+				//	(*data & normalMap->format->Bmask) >> normalMap->format->Bshift);
 
-			);
+
+				p.normal = glm::normalize(transformNormalMatrix * glm::vec3(
+					((float)((*data & normalMap->format->Rmask) >> normalMap->format->Rshift) - 127.f) / 128.f,
+					((float)((*data & normalMap->format->Gmask) >> normalMap->format->Gshift) - 127.f) / 128.f,
+					(float)((*data & normalMap->format->Bmask) >> normalMap->format->Bshift) / 255.f));
+			}
+
 			innerData.push_back(p);
 		}
 		data.push_back(innerData);
 	}
 	return;
+}
+
+bool Triangulation::hasNormalMap()
+{
+	return normalMap != NULL;
+}
+
+bool Triangulation::loadNormalMap(SDL_Renderer* r)
+{
+	deleteNormalMap();
+	normalMap = IMG_Load(normalMapPath.c_str());
+	if (normalMap != NULL)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+void Triangulation::deleteNormalMap()
+{
+	if (normalMap != NULL)
+	{
+		SDL_FreeSurface(normalMap);
+		normalMap = NULL;
+	}
 }
 
 std::vector<std::vector<PointData>>& Triangulation::getData()

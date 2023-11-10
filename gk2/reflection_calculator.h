@@ -3,11 +3,15 @@
 #include "glm/vec3.hpp"
 #include "imgui.h"
 #include "triangulation.h"
+#include "SDL.h"
+#include <string>
 
 class ReflectionCalculator 
 {
 	static ReflectionCalculator* _instance;
 	ReflectionCalculator();
+	SDL_Surface* objectTexture = NULL;
+	SDL_Surface* normalMap = NULL;
 public:
 	static ReflectionCalculator* get();
 	float kd;
@@ -16,5 +20,10 @@ public:
 	glm::vec3 lightSource;
 	ImVec4 objectColor;
 	ImVec4 lightColor;
-	glm::vec3 calculateColor(glm::vec3 nVector, glm::vec3 pos);
+	std::string objectTexturePath = "";
+	std::string normalMapPath = "";
+	bool loadObjectTexture(SDL_Renderer* r);
+	void deleteObjectTexture();
+	bool hasTexture();
+	unsigned calculateColor(glm::vec3 nVector, glm::vec3 pos);
 };
