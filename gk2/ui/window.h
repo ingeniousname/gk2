@@ -12,7 +12,7 @@ class Window {
 	Triangulation t;
 	std::chrono::high_resolution_clock::time_point now, last;
 	float R, T, time;
-	bool paused, textureFromFile, fileError;
+	bool paused, textureFromFile, fileError, drawTriangulation = false;
 
 	void renderGUI(int*);
 	void updateFrame(int);

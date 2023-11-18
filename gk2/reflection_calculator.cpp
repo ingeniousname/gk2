@@ -45,7 +45,7 @@ unsigned ReflectionCalculator::calculateColor(glm::vec3 nVector, glm::vec3 pos)
 
 		nVector = glm::normalize(transformNormalMatrix * glm::vec3(
 			((float)((*data & normalMap->format->Rmask) >> normalMap->format->Rshift) - 127.f) / 128.f,
-			((float)((*data & normalMap->format->Gmask) >> normalMap->format->Gshift) - 127.f) / 128.f,
+			-((float)((*data & normalMap->format->Gmask) >> normalMap->format->Gshift) - 127.f) / 128.f,
 			(float)((*data & normalMap->format->Bmask) >> normalMap->format->Bshift) / 255.f));
 	}
 
@@ -54,7 +54,7 @@ unsigned ReflectionCalculator::calculateColor(glm::vec3 nVector, glm::vec3 pos)
 	glm::vec3 R = 2 * NLangleCos * nVector - L;
 	float VRangleCos = glm::dot({ 0, 0, 1 }, glm::normalize(R));
 	if (VRangleCos < 0) VRangleCos = 0;
-	VRangleCos = std::pow(VRangleCos, m);
+	VRangleCos = std::powf(VRangleCos, m);
 
 	Uint8 red = 2, green, blue;
 	if (objectTexture == NULL)

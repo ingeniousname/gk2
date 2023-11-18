@@ -85,6 +85,25 @@ void Triangulation::updateTriangulation(int width, int height)
 	return;
 }
 
+void Triangulation::drawTriangluation(SDL_Renderer* r)
+{
+	SDL_SetRenderDrawColor(r, 50, 50, 50, 255);
+	for (int i = 0; i <= divisions_X; i++)
+	{
+		SDL_RenderDrawLine(r, data[i][0].x, data[i][0].y, data[i][divisions_Y].x, data[i][divisions_Y].y);
+
+		for (int j = 0; j <= divisions_Y; j++)
+		{
+			if (i < divisions_X && j > 0)
+			{
+				SDL_RenderDrawLine(r, data[i][j].x, data[i][j].y, data[i + 1][j - 1].x, data[i + 1][j - 1].y);
+			}
+		}
+	}
+	for (int j = 0; j <= divisions_Y; j++)
+		SDL_RenderDrawLine(r, data[0][j].x, data[0][j].y, data[divisions_X][j].x, data[divisions_X][j].y);
+}
+
 
 std::vector<std::vector<PointData>>& Triangulation::getData()
 {

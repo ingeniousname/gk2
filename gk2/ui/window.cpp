@@ -27,7 +27,7 @@ void Window::renderGUI(int* value)
     {
         t.updateTriangulation(WIDTH, HEIGHT);
     }
-
+    ImGui::Checkbox("Draw triangulation", &drawTriangulation);
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
@@ -93,7 +93,7 @@ void Window::renderGUI(int* value)
         {
             std::string text = "(" + std::to_string(i) + "," + std::to_string(j) + ")";
             ImGui::PushItemWidth(100);
-            if (ImGui::SliderFloat(text.c_str(), &t.z_point[i][j], -1.f, 1.f, "%.3f"))
+            if (ImGui::SliderFloat(text.c_str(), &t.z_point[j][i], -1.f, 1.f, "%.3f"))
             {
                 t.updateTriangulation(WIDTH, HEIGHT);
             }
@@ -293,6 +293,8 @@ void Window::run()
         SDL_RenderClear(renderer);
         updateFrame(tick);
         SDL_RenderCopy(renderer, screenTexture, NULL, NULL);
+        if(drawTriangulation)
+            t.drawTriangluation(renderer);
         renderGUI(&value);
         SDL_RenderPresent(renderer);
         tick += 5;

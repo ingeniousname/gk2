@@ -42,5 +42,6 @@ public:
 	int divisions_X;
 	int divisions_Y;
 	void updateTriangulation(int width, int height);
+	void drawTriangluation(SDL_Renderer* r);
 	std::vector<std::vector<PointData>>& getData();
 };
